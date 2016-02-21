@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Tambah Master Penolakan</title>
+        <style>
+            @font-face {
+                font-family: Titillium;
+                src: url("{{ url_for('static', filename='Titillium-Regular.otf')}}") format("opentype");
+            }
+            
+            @font-face {
+                font-family: Titillium;
+                font-weight: bold;
+                src: url("{{ url_for('static', filename='Titillium-Bold.otf')}}") format("opentype");
+            
+            }
+            
+            body {
+                font-family: Titillium;
+                margin: 0px;
+            }
+            
+        </style>
+        <script src="../static/test.js"></script>
+        <script>
+        </script>
+    </head>
+    <body>
+        <div style='height:252px; width:400px; padding:5px; margin:0px; background-color:#dddddd; '>
+            <div style='background-color: #173169; margin:0px; margin-bottom:10px; padding-top:10px; height:46px;'>
+                <h3 style='color:white; float:left; margin:5px;'>TAMBAH MASTER PENOLAKAN</h3>
+                <img src="{{ url_for('static', filename='sun.png')}}" style='float:right; margin:0px;'/>
+            </div>
+            <div>
+                <table style='width:388px;;'>
+                    <tr style='height:40px;'>
+                        <td><p style='width:120px; float:left; margin:0px;'>Nama Barang:</p></td>
+                        <td><input id='nama' type='text' size='30' onkeydown="alfib();"/></td>
+                    </tr>
+                    <tr style='height:40px;'>
+                        <td><p style='width:120px; float:left; margin:0px;'>Satuan:</p></td>
+                        <td><input id='satuan' type='text' size='30'/></td>
+                    </tr>
+                    <tr style='height:40px;'>
+                        <td><p style='width:120px; float:left; margin:0px;'>Harga (HNA+PPN):</p></td>
+                        <td><input id='harga' type='text' size='30'/></td>
+                    </tr>
+                    <tr style='height:55px;'>
+                        <td><button id='cancel' style='background-color:#aa0000; color: white; width:100px; height:40px;'>Batal</button></td>
+                        <td><button id='submit' style='float:right; width:100px; height:40px; background-color:#009900; color: white;'>Selesai</button></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

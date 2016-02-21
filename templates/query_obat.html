@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Pilih Nama Barang:</title>
+    <style>
+        @font-face {
+            font-family: Titillium;
+            src: url("{{ url_for('static', filename='Titillium-Regular.otf')}}") format("opentype");
+        }
+        
+        @font-face {
+            font-family: Titillium;
+            font-weight: bold;
+            src: url("{{ url_for('static', filename='Titillium-Bold.otf')}}") format("opentype");
+        
+        }
+        
+        body {
+            font-family: Titillium;
+        }
+    </style>
+    <script>
+        var bef_select = 'r1';
+        var curr_select = 'r1';
+        function curr_num() {
+            return parseInt(curr_select.substring(1,6));
+        }
+        
+        function select(which_id){
+            var myElements = document.getElementById(which_id).getElementsByTagName('TD');
+            for (var i = 0; i < myElements.length; i++){
+                myElements[i].setAttribute('style','background-color:#eb8a1b;');
+            }
+        }
+            
+        function deselect(which_id){
+            var myElements = document.getElementById(which_id).getElementsByTagName('TD');
+            for (var i = 0; i < myElements.length; i++){
+                myElements[i].setAttribute('style','background-color:#ffffff;');
+            }
+        }
+        
+        function mark(the_id){
+            bef_select = curr_select;
+            curr_select = the_id;
+            deselect(bef_select);
+            select(curr_select);
+            checkFrame();
+            moveFrame();
+            scrollToFrame();
+        }
+        
+        function press_enter(e){
+            if (e.keyCode == 13) {
+                alert(curr_select);
+            }
+        }
+        
+            
+        var numberOfRows = 1;
+        
+        function add_row(number){
+        
+            var tr = document.createElement("tr");
+            var num_row = number.toString();
+            tr.setAttribute('id', 'r'+num_row);
+            tr.setAttribute('onclick', "mark('r" + num_row + "');");
+            tr.setAttribute('ondblclick', 'alert(curr_select)');
+            
+            var col1 = document.createElement("td");
+            col1.setAttribute('bgcolor', '#ffffff');
+            var div1 = document.createElement("div");
+            div1.setAttribute('style', 'width:196px; text-align:center;');
+            col1.appendChild(div1);
+            tr.appendChild(col1);
+            
+            var col2 = document.createElement("td");
+            var div2 = document.createElement("div");
+            var p2 = document.createElement("p");
+            col2.setAttribute('bgcolor', '#ffffff');
+            div2.setAttribute('style','width:542px; overflow:hidden;padding-right:0px');
+            p2.setAttribute('style','width:700px; margin:0px; text-align:left;');
+            div2.appendChild(p2);
+            col2.appendChild(div2);
+            tr.appendChild(col2);
+            
+            var the_table = document.getElementById('cells');
+            the_table.appendChild(tr);
+        }
+        
+        function row_count(){
+            add_row(numberOfRows + 1);
+            numberOfRows++;
+        }
+        
+        function el_add_row(){
+            document.getElementById('entri').onclick=row_count;
+        }
+        
+        var res;
+        var rowsNeeded;
+        var rowsRange;
+        var top_frame;
+        var bot_frame;
+        function queryget(){
+            xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function(){
+                if(xhttp.readyState == 4 && xhttp.status == 200) {
+                    res = JSON.parse(xhttp.responseText);
+                    rowsNeeded = res.result.length;
+                    if (res.result.length < 21) {
+                        rowsRange = rowsNeeded;
+                    } else {
+                        rowsRange = 21;
+                    }
+                    top_frame = 1;
+                    bot_frame = top_frame + (rowsRange - 1);
+                    generateRows();
+                    fillTheRows();
+                    autoSelect();
+                }
+            }
+            xhttp.open("GET", "/getresult?foo=bar", true);
+            xhttp.send();
+        }
+        
+        function query_delay(){
+            setTimeout(queryget,1000);
+        }
+        
+        function generateRows(){
+            for (var i=0; i<(rowsNeeded - 1); i++){
+                row_count();
+            }
+        }
+        
+        function fillTheRows(){
+            for (var i=0; i<rowsNeeded; i++) {
+                document.getElementById('r'+(i+1)).getElementsByTagName('TD')[0].getElementsByTagName('DIV')[0].innerHTML = res.result[i][0];
+                document.getElementById('r'+(i+1)).getElementsByTagName('TD')[1].getElementsByTagName('DIV')[0].getElementsByTagName('P')[0].innerHTML = res.result[i][1];
+            }
+        }
+        
+        function checkFrame(){
+            var currTopScroll = document.getElementById('tab_rows').scrollTop;
+            top_frame = Math.ceil(currTopScroll / 23) + 1;
+            bot_frame = top_frame + (rowsRange - 1);
+        }
+        
+        function moveFrame(){
+            if (curr_num() >= top_frame && curr_num() <= bot_frame) {
+            } else {
+                if (curr_num() > bot_frame) {
+                    bot_frame = curr_num();
+                    top_frame = bot_frame - (rowsRange - 1);
+                } else {
+                    if (curr_num() < top_frame) {
+                        top_frame = curr_num();
+                    bot_frame = top_frame + (rowsRange - 1);
+                    }
+                }
+            }
+        }
+        
+        function scrollToFrame(){
+            document.getElementById("tab_rows").scrollTop=(top_frame - 1) * 23;
+        }
+
+        function upOrDown(e){
+            function ch_mark(num){
+                var num_str = num.toString();
+                mark('r'+num_str);
+            }
+            if (e.keyCode == 38){
+                if (curr_num() != 1){
+                    ch_mark(curr_num() - 1);
+                } else {
+                    mark(curr_select);
+                }
+            } else {
+                if (e.keyCode == 40){
+                    if (curr_num() != numberOfRows){
+                        ch_mark(curr_num() + 1);
+                    } else {
+                        mark(curr_select);
+                    }
+                } else {
+                    if (e.keyCode == 13){
+                        alert(curr_select);
+                    }
+                }
+            }
+        }
+        
+        function disable_default(e){
+            if (e.keyCode == 38 || e.keyCode == 40) {
+                e.preventDefault();
+            }
+        }
+        
+        
+        function autoSelect(){
+            if (rowsNeeded > 0) {
+                document.getElementById('cells').focus();
+                select('r1');
+            }
+        }
+        
+        
+      
+    </script>
+</head>
+<body onload='query_delay();' style='margin:0px;'>
+    <div style='background-color: #dddddd;'>
+        <table style='width:800px;'><!--height:20px; -->
+            <tr>
+                <th bgcolor='#aaaaaa'><div style='width:196px;'>Kode Obat</div></th>
+                <th bgcolor='#aaaaaa'><div style='width:542px;'>Nama Obat</div></th>
+                <th bgcolor='#aaaaaa'><div style='width:18px;'></div></th>
+            </tr>
+        </table>
+        <div id='tab_rows' style='height:506px; width:798px; overflow:scroll;' onkeydown='disable_default(event);'>
+            <table id='cells' style='width:776px;' tabindex='1' onkeydown='upOrDown(event);'>
+                <tr id='r1' onclick="mark('r1');" ondblclick='alert(curr_select);'>
+                    <td bgcolor='#ffffff'><div style='width:196px;text-align:center;'></div></td>
+                    <td bgcolor='#ffffff'><div style='width:542px; overflow:hidden;padding-right:0px'><p style='width:700px; margin:0px; text-align:left;'></p></div></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <p>
+    </p>
+</body>

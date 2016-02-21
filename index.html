@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Loading...</title>
+    <script type="text/javascript">
+      window.$ = window.jQuery = require('jquery');
+      var mainAddr = 'http://localhost:5000';
+      function access_server(){
+        $.ajax({
+            type: 'HEAD',
+            url: mainAddr,
+            success: function() {
+                //alert('good');
+                location.replace(mainAddr);
+            },
+            error: function() {
+                alert('some errors happen...');
+                // page does not exist
+            }
+        });
+      }
+      setTimeout(access_server, 5000);
+    </script>
+    <style>
+    </style>
+  </head>
+  <body>
+    <img src='static/LOGO KIMIA FARMA APOTEK.png'/>
+  </body>
+</html>
+
