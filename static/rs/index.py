@@ -2,54 +2,167 @@ rs_eval("index.py",`
 ###########################################################################
 
 
+v"var isnt_touchable = !('ontouchstart' in window);"
+
+def sp2():
+  pageHeight=530
+  pageWidth=800
+  ratio = window.innerWidth / pageWidth
+  if ratio < 1:
+    document.body.style.transform = 'scale('+ratio+')'
+    document.body.style['transform-origin'] = '0 0'
+
+
+def yuy():
+  alert("yuy!")
+
 def():
   def do_this():
     set_today()
     generateRows()
     focusNamaObat()
     select('r1')
+    document.getElementById('inp_namaobat').setAttribute("onkeypress","do_query(this,event);")
+    document.getElementById('inp_namaobat').setAttribute("onfocus","(function(){emptyTheFields(); rm_tempitem();})();")
+    document.getElementById('hapus').setAttribute("onclick","(function(){emptyTheFields(); rm_tempitem();})();")
+    if isnt_touchable:
+      document.getElementById('r1').setAttribute("onclick","sel.mark('r1');")
+      document.getElementById('r1').setAttribute("ondblclick",'sel.reaccItem();')
+    else:
+      document.getElementById('r1').setAttribute('ontouchstart', "tap.touchstart('r1', onetapr1, dbltapr1)(event);")
+      document.getElementById('r1').setAttribute('ontouchend', "tap.touchend('r1', onetapr1, dbltapr1)(event);")
   document.addEventListener("DOMContentLoaded", do_this)
 .call()
 
+class Tap:
+  def __init__(self):
+    self.lasttap = ""
+    self.r = ""
+    self.treshold = 10
+    self.loc = [0,0]
+    
+  def tap(self, source, fn, fn2):
+    def reset():
+      self.lasttap = ""
+    def f(event):
+      if source == self.lasttap:
+        clearTimeout(self.r)
+        fn2()
+      else:
+        fn()
+        self.lasttap = source
+        self.r = setTimeout(reset, 200)
+    return f
+    
+  def touchstart(self, source, fn, fn2):
+    def f(event):
+      self.loc = [event.changedTouches[0].pageX, event.changedTouches[0].pageY]
+    return f
+  
+  def touchend(self, source_te, fn_te, fn2_te):
+    def f(event):
+      test_x = abs(event.changedTouches[0].pageX - self.loc[0]) <= self.treshold
+      test_y = abs(event.changedTouches[0].pageY - self.loc[1]) <= self.treshold
+      if test_x and test_y:
+        self.tap(source_te, fn_te, fn2_te)(event)
+    return f
 
-bef_select = 'r1'
-curr_select = 'r1'
+tap = Tap()
 
-def curr_num():
-  return parseInt(curr_select.substring(1,6))
+class Selector:
+  def __init__(self):
+    self.bef_select = 'r1'
+    self.curr_select = 'r1'
+    self.numberOfRows = 1
+    self.top_frame = 1
+    self.bot_frame = 8
+  def curr_num(self):
+    return parseInt(self.curr_select[1:6])
+  def chselect(self, new_select):
+    self.bef_select = self.curr_select
+    self.curr_select = new_select
+  def mark(self, the_id):
+    self.chselect(the_id)
+    deselect(self.bef_select)
+    select(self.curr_select)
+    self.checkFrame()
+    self.moveFrame()
+    self.scrollToFrame()
+  def moveFrame(self):
+    if self.curr_num() >= self.top_frame and self.curr_num() <= self.bot_frame:
+      pass
+    else:
+      if self.curr_num() > self.bot_frame:
+        self.bot_frame = self.curr_num()
+        self.top_frame = self.bot_frame - 7
+      elif self.curr_num() < self.top_frame:
+        self.top_frame = self.curr_num()
+        self.bot_frame = self.top_frame + 7
+  def upOrDown(self, e):
+    def ch_mark(num):
+      num_str = num.toString()
+      self.mark('r'+num_str)
+    if (e.keyCode == 38):
+      if (self.curr_num() != 1):
+        ch_mark(self.curr_num() - 1)
+      else:
+        self.mark(self.curr_select)
+    elif (e.keyCode == 40):
+      if (self.curr_num() != self.numberOfRows):
+        ch_mark(self.curr_num() + 1)
+      else:
+        self.mark(self.curr_select)
+    elif (e.keyCode == 13):
+      self.reaccItem()
+  def reaccItem(self):
+    emptyTheFields()
+    copyDataToTemp(self.curr_num()-1)
+    removeARow(self.curr_select)
+    entriedItem.splice(self.curr_num()-1,1)
+    fillTheFieldsFromTemp()
+    document.getElementById("inp_qty").focus()
+  def row_count(self):
+    add_row(self.numberOfRows + 1)
+    self.numberOfRows = self.numberOfRows + 1
+  def checkFrame(self):
+    currTopScroll = document.getElementById('tab_rows').scrollTop
+    self.top_frame = Math.ceil(currTopScroll / 23) + 1
+    self.bot_frame = self.top_frame + 7
+  def scrollToFrame(self):
+    document.getElementById("tab_rows").scrollTop=(self.top_frame - 1) * 23
 
 def select(which_id):
   myElements = document.getElementById(which_id).getElementsByTagName('TD')
   for i in range(myElements.length):
     myElements[i].setAttribute('style','background-color:#eb8a1b')
-
+    
 def deselect(which_id):
   myElements = document.getElementById(which_id).getElementsByTagName('TD')
   for i in range(myElements.length):
     myElements[i].setAttribute('style','background-color:#ffffff')
 
-def mark(the_id):
-  nonlocal bef_select, curr_select
-  bef_select = curr_select
-  curr_select = the_id
-  deselect(bef_select)
-  select(curr_select)
-  checkFrame()
-  moveFrame()
-  scrollToFrame()
+sel = Selector()
 
-def press_enter(e):
-  if e.keyCode == 13:
-    alert(curr_select)
+def onetapr1():
+  sel.mark('r1')
+def dbltapr1():
+  sel.reaccItem()
 
-numberOfRows = 1
 
 def add_row(number):
   tr = document.createElement("tr")
   num_row = number.toString()
   tr.setAttribute('id', 'r'+num_row)
-  tr.setAttribute('onclick', "mark('r" + num_row + "');")
-  tr.setAttribute('ondblclick', 'reaccItem();')
+  if isnt_touchable:
+    tr.setAttribute('onclick', "sel.mark('r" + num_row + "');")
+    tr.setAttribute('ondblclick', 'sel.reaccItem();')
+  else:
+    def onetap():
+      sel.mark('r' + num_row)
+    def dbltap():
+      sel.reaccItem()
+    tr.addEventListener('touchstart', tap.touchstart('r'+num_row, onetap, dbltap))
+    tr.addEventListener('touchend', tap.touchend('r'+num_row, onetap, dbltap))
 
   col1 = document.createElement("td")
   col1.setAttribute('bgcolor', '#ffffff')
@@ -64,7 +177,7 @@ def add_row(number):
   div2 = document.createElement("div")
   p2 = document.createElement("p")
   col2.setAttribute('bgcolor', '#ffffff')
-  div2.setAttribute('style','width:336px; overflow:hidden;padding-right:0px')
+  div2.setAttribute('style','width:331px; overflow:hidden;padding-right:0px')
   p2.setAttribute('style','width:500px; margin:0px; text-align:left;')
   div2.appendChild(p2)
   col2.appendChild(div2)
@@ -101,54 +214,9 @@ def add_row(number):
   the_table = document.getElementById('cells')
   the_table.appendChild(tr)
 
-def row_count():
-  nonlocal numberOfRows
-  add_row(numberOfRows + 1)
-  numberOfRows = numberOfRows + 1
 
 def el_add_row():
-  document.getElementById('entri').onclick=row_count
-
-top_frame = 1
-bot_frame = 8
-
-def checkFrame():
-  nonlocal top_frame, bot_frame
-  currTopScroll = document.getElementById('tab_rows').scrollTop
-  top_frame = Math.ceil(currTopScroll / 23) + 1
-  bot_frame = top_frame + 7
-
-def moveFrame():
-  nonlocal bot_frame, top_frame
-  if curr_num() >= top_frame and curr_num() <= bot_frame:
-    pass
-  else:
-    if curr_num() > bot_frame:
-      bot_frame = curr_num()
-      top_frame = bot_frame - 7
-    elif curr_num() < top_frame:
-      top_frame = curr_num()
-      bot_frame = top_frame + 7
-
-def scrollToFrame():
-  document.getElementById("tab_rows").scrollTop=(top_frame - 1) * 23
-  
-def upOrDown(e):
-  def ch_mark(num):
-    num_str = num.toString()
-    mark('r'+num_str)
-  if (e.keyCode == 38):
-    if (curr_num() != 1):
-      ch_mark(curr_num() - 1)
-    else:
-      mark(curr_select)
-  elif (e.keyCode == 40):
-    if (curr_num() != numberOfRows):
-      ch_mark(curr_num() + 1)
-    else:
-      mark(curr_select)
-  elif (e.keyCode == 13):
-    reaccItem()
+  document.getElementById('entri').onclick=sel.row_count
 
 def disable_default(e):
   if e.keyCode == 38 or e.keyCode == 40:
@@ -161,7 +229,17 @@ def ch_focus(e):
 
 def get_today():
   today = new Date(Date.now())
-  fmttoday = today.getFullYear().toString() + '-' + (today.getMonth()+1).toString() + '-' + today.getDate().toString()
+  mnth = (today.getMonth()+1).toString()
+  dt = today.getDate().toString()
+  if mnth.length == 2:
+    mnthfmtd = mnth
+  else:
+    mnthfmtd = "0" + mnth
+  if dt.length == 2:
+    dtfmtd = dt
+  else:
+    dtfmtd = "0" + dt
+  fmttoday = today.getFullYear().toString() + '-' + mnthfmtd + '-' + dtfmtd
   return fmttoday
 
 def do_query(t,e):
@@ -184,7 +262,7 @@ def set_today():
 
 def generateRows():
   for i in range(9):
-    row_count()
+    sel.row_count()
 
 def focusNamaObat():
   document.getElementById('inp_namaobat').focus()
@@ -225,8 +303,20 @@ def qadd_row(number):
   tr = document.createElement("tr")
   num_row = number.toString()
   tr.setAttribute('id', 'qr'+num_row)
-  tr.setAttribute('onclick', "qmark('qr" + num_row + "');")
-  tr.setAttribute('ondblclick', 'chosen()')
+  if isnt_touchable:
+    tr.setAttribute('onclick', "qmark('qr" + num_row + "');")
+    tr.setAttribute('ondblclick', 'chosen()')
+  else:
+    def onetap():
+      qmark('qr'+num_row)
+    def dbltap():
+      chosen()
+    def touchstart(evt):
+      tap.touchstart('qr'+num_row, onetap, dbltap)(evt)
+    def touchend(evt):
+      tap.touchend('qr'+num_row, onetap, dbltap)(evt)
+    tr.ontouchstart=touchstart
+    tr.ontouchend=touchend
   
   col1 = document.createElement("td")
   col1.setAttribute('bgcolor', '#ffffff')
@@ -259,11 +349,11 @@ def qqueryget(token):
     nonlocal qres, qrowsNeeded, qrowsRange, qtop_frame, qbot_frame
     if xhttp.readyState == 4 and xhttp.status == 200:
       qres = JSON.parse(xhttp.responseText)
-      qrowsNeeded = qres.result.length;
-      if qres.result.length < 21:
+      qrowsNeeded = qres.result.length
+      if qres.result.length < 17:
         qrowsRange = qrowsNeeded
       else:
-        qrowsRange = 21
+        qrowsRange = 17
     
       qtop_frame = 1
       qbot_frame = qtop_frame + (qrowsRange - 1)
@@ -348,7 +438,7 @@ def qautoSelect():
 def frame_constructor():
   divc = document.createElement('div')
   divc.id = 'qfloat'
-  divc.setAttribute('style','background-color: #dddddd; height:546px; width:805px; position:absolute; top:0px; left:0px; z-index:1;')
+  divc.setAttribute('style','background-color: #dddddd; height:536px; width:805px; position:absolute; top:0px; left:0px; z-index:1;')
   tabHeader = document.createElement('table')
   tabHeader.setAttribute('style','width:800px;height:20px;')
   qtr = document.createElement('tr')
@@ -378,7 +468,7 @@ def frame_constructor():
   divc.appendChild(tabHeader)
   qdivr = document.createElement('div')
   qdivr.id = 'qtab_rows'
-  qdivr.setAttribute('style','height:506px; width:798px; overflow:scroll;')
+  qdivr.setAttribute('style','height:476px; width:798px; overflow:scroll;')
   qdivr.setAttribute('onkeydown','qdisable_default(event);')
   qtabler = document.createElement('table')
   qtabler.id = 'qcells'
@@ -387,6 +477,15 @@ def frame_constructor():
   qtabler.setAttribute('onkeydown','qupOrDown(event);')
   qdivr.appendChild(qtabler)
   divc.appendChild(qdivr)
+  qdivback = document.createElement('div')
+  qdivback.setAttribute('style','height:30px; width:798px; padding:2px;')
+  qbackbutt = document.createElement('button')
+  qbackbutt.id = "kembali"
+  
+  qbackbutt.innerHTML = "<b>Kembali</b>"
+  qbackbutt.setAttribute("style","height:26px;")
+  qdivback.appendChild(qbackbutt)
+  divc.appendChild(qdivback)
   document.body.appendChild(divc)
 
 temp_item={}
@@ -421,6 +520,11 @@ def inputHarga():
     document.getElementById('tabtrx').focus()
     trxmark('trx1')
 
+def chooseTrxFrame():
+  document.getElementById('inp_harga').value = fillHarga()
+  document.getElementById('trxframe').remove()
+  document.getElementById('inp_qty').focus()
+
 def jenisTrxFrame():
   divd = document.createElement('div')
   divd.id = 'trxframe'
@@ -432,16 +536,30 @@ def jenisTrxFrame():
   tabd.setAttribute('onkeydown', 'trxupOrDown(event); dis_ch_focus(event);')
   trd1 = document.createElement('tr')
   trd1.id = 'trx1'
-  trd1.setAttribute('onclick', "trxmark('trx1');")
-  trd1.setAttribute('ondblclick', 'alert(trxcurr_select)')
   trd2 = document.createElement('tr')
   trd2.id = 'trx2'
-  trd2.setAttribute('onclick', "trxmark('trx2');")
-  trd2.setAttribute('ondblclick', 'alert(trxcurr_select)')
   trd3 = document.createElement('tr')
   trd3.id = 'trx3'
-  trd3.setAttribute('onclick', "trxmark('trx3');")
-  trd3.setAttribute('ondblclick', 'alert(trxcurr_select)')
+  if isnt_touchable:
+    trd1.setAttribute('onclick', "trxmark('trx1');")
+    trd1.setAttribute('ondblclick', 'chooseTrxFrame();')
+    trd2.setAttribute('onclick', "trxmark('trx2');")
+    trd2.setAttribute('ondblclick', 'chooseTrxFrame();')
+    trd3.setAttribute('onclick', "trxmark('trx3');")
+    trd3.setAttribute('ondblclick', 'chooseTrxFrame();')
+  else:
+    def onetaptrx1():
+      trxmark('trx1')
+    def onetaptrx2():
+      trxmark('trx2')
+    def onetaptrx3():
+      trxmark('trx3')
+    trd1.addEventListener('touchstart', tap.touchstart('trx1', onetaptrx1, chooseTrxFrame))
+    trd2.addEventListener('touchstart', tap.touchstart('trx2', onetaptrx2, chooseTrxFrame))
+    trd3.addEventListener('touchstart', tap.touchstart('trx3', onetaptrx3, chooseTrxFrame))
+    trd1.addEventListener('touchend', tap.touchend('trx1', onetaptrx1, chooseTrxFrame))
+    trd2.addEventListener('touchend', tap.touchend('trx2', onetaptrx2, chooseTrxFrame))
+    trd3.addEventListener('touchend', tap.touchend('trx3', onetaptrx3, chooseTrxFrame))
   divd1 = document.createElement('div')
   divd1.setAttribute('style','background-color: #ffffff; height:23px; padding:5px;')
   divd2 = document.createElement('div')
@@ -573,10 +691,10 @@ def execEntri():
   if temp_item.kode == undefined:
     alert('Harap isi Nama Obat!')
     document.getElementById('inp_namaobat').focus()
-  elif numberOfRows == entriedItem.length: #aaaaannneeeeeh
-    row_count()
-    #kode_obat, nama_obat, satuan, hnappn, faktor, hja, qty, subtot
-  entriedItem.push({kode:temp_item.kode, nama:temp_item.nama, satuan:temp_item.satuan, hnappn:temp_item.hnappn, faktor:temp_item.faktor, hja:temp_item.hja, qty:temp_item.qty, subtot:temp_item.subtot})
+  elif sel.numberOfRows == entriedItem.length:
+    sel.row_count()
+  #kode_obat, nama_obat, satuan, hnappn, faktor, hja, qty, subtot
+  entriedItem.push({"kode":temp_item.kode, "nama":temp_item.nama, "satuan":temp_item.satuan, "hnappn":temp_item.hnappn, "faktor":temp_item.faktor, "hja":temp_item.hja, "qty":temp_item.qty, "subtot":temp_item.subtot})
   entriToRows()
   document.getElementById('inp_namaobat').focus()
 
@@ -631,9 +749,8 @@ def setDataToARow(rid, data):
   document.getElementById(rid).getElementsByTagName('TD')[5].getElementsByTagName('DIV')[0].innerHTML=data.subtot
 
 def removeARowField(rid):
-  nonlocal numberOfRows
   document.getElementById(rid).remove()
-  numberOfRows = numberOfRows - 1
+  sel.numberOfRows = sel.numberOfRows - 1
 
 def removeARow(rid):
   numOfDataInTheRows = entriedItem.length
@@ -649,7 +766,7 @@ def removeARow(rid):
       delDataInARow('r' + (id-1).toString())
       setDataToARow('r' + (id-1).toString(), getDataOfARow('r'+id.toString()))
     delDataInARow('r' + entriedItem.length.toString())
-    if numberOfRows > 10:
+    if sel.numberOfRows > 10:
       removeARowField('r' + entriedItem.length.toString())
 
 def fillTheFieldsFromTemp():
@@ -659,14 +776,8 @@ def fillTheFieldsFromTemp():
   document.getElementById("inp_qty").value = fmtedInt(temp_item.qty)
   document.getElementById("inp_subtot").value = fmtedInt(temp_item.subtot)
 
-def reaccItem():
-  emptyTheFields()
-  copyDataToTemp(curr_num()-1)
-  removeARow(curr_select)
-  entriedItem.splice(curr_num()-1,1)
-  fillTheFieldsFromTemp()
-  document.getElementById("inp_qty").focus()
-
+def yay():
+  alert("yay!")
 
 ###################################################################################
 `);
