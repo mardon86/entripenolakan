@@ -42,12 +42,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return render_template('index2.html')
-
-
-@app.route("/test", methods=['GET','POST'])
-def test():
-    return render_template('index6.html')
+    return render_template('index.html')
 
 
 @app.route("/queryreq", methods=['GET'])
@@ -59,10 +54,6 @@ def queryreq():
         finally:
             searchkw.pop()
         
-@app.route("/tambahmaster")
-def tambahmaster():
-    return render_template('tambah_master.html')
-
 if __name__ == "__main__":
     print('oh hello')
     sys.stdout.flush()
